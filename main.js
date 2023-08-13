@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain } = require('electron');
 const path = require('path')
 
 const isMac = process.platform === 'darwin'
@@ -69,6 +69,10 @@ app.whenReady().then(() => {
             createMainWindow()
         }
     })
+})
+
+ipcMain.on('image:resize', (event, options) => {
+    console.log(options)
 })
 
 app.on('window-all-closed', () => {

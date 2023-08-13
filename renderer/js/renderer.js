@@ -13,8 +13,8 @@ function isFileImage(file) {
 
 function loadImage(event) {
     const file = event.target.files[0];
-    console.log(file)
     if (!isFileImage(file)) {
+        alertError('Please select an image');
         return
     }
     const reader = new FileReader();
@@ -34,4 +34,57 @@ function loadImage(event) {
     outputPath.innerText = path.join(os.homeDir(), 'imageresizer');
 }
 
-img.addEventListener('change', loadImage)
+// Resize image
+function resizeImage(e) {
+    e.preventDefault();
+
+    if (!img.files[0]) {
+        alertError('Please upload an image');
+        return;
+    }
+
+    if (widthInput.value === '' || heightInput.value === '') {
+        alertError('Please enter a width and height');
+        return;
+    }
+
+    // Electron adds a bunch of extra properties to the file object including the path
+    const imgPath = img.files[0].path;
+    const width = widthInput.value;
+    const height = heightInput.value;
+
+    ipcRenderer.send('image:resize', {
+        imgPath,
+        height,
+        width,
+    });
+}
+
+function alertSuccess(message) {
+    Toastify.toast({
+        text: message,
+        duration: 5000,
+        close: false,
+        style: {
+            background: 'green',
+            color: 'white',
+            textAlign: 'center',
+        },
+    });
+}
+
+function alertError(message) {
+    Toastify.toast({
+        text: message,
+        duration: 5000,
+        close: false,
+        style: {
+            background: 'red',
+            color: 'white',
+            textAlign: 'center',
+        },
+    });
+}
+
+img.addEventListener('change', loadImage);
+form.addEventListener('submit',resizeImage)
