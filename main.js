@@ -1,11 +1,14 @@
-const { app, BrowserWindow, Menu, ipcMain } = require('electron');
-const path = require('path')
+const { app, BrowserWindow, Menu, ipcMain, shell } = require('electron');
+const path = require('path');
+const os = require('os');
+const fs = require('fs');
+const resizeImg = require('resize-img');
 
 const isMac = process.platform === 'darwin'
 const isDev = process.env.NODE_ENV !== 'production';
-
+let mainWindow;
 const createMainWindow = () => {
-    const win = new BrowserWindow({
+    mainWindow = new BrowserWindow({
         width: isDev ? 1000 : 500,
         height: 600,
         webPreferences: {
@@ -14,10 +17,12 @@ const createMainWindow = () => {
             preload: path.join(__dirname, 'preload.js')
         }
     })
+    console.log(isDev)
     if (isDev) {
-        win.webContents.openDevTools()
+        console.log('isDev')
+        mainWindow.webContents.openDevTools()
     }
-    win.loadFile(path.join(__dirname, './renderer/index.html'))
+    mainWindow.loadFile(path.join(__dirname, './renderer/index.html'))
 }
 
 const createAboutWindow = () => {
@@ -64,6 +69,8 @@ app.whenReady().then(() => {
     createMainWindow();
     const mainMenu = Menu.buildFromTemplate(menu);
     Menu.setApplicationMenu(mainMenu)
+    // Remove variable from memory
+    mainWindow.on('closed', () => (mainWindow = null));
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
             createMainWindow()
@@ -72,8 +79,36 @@ app.whenReady().then(() => {
 })
 
 ipcMain.on('image:resize', (event, options) => {
-    console.log(options)
+    options.dest = path.join(os.homedir(), 'imageresizer')
+    resizeImage(options)
 })
+
+async function resizeImage({ imgPath, height, width, dest }) {
+    try {
+        // Resize image
+        const newPath = await resizeImg(fs.readFileSync(imgPath), {
+            width: +width,
+            height: +height,
+        });
+
+        const fileName = path.basename(imgPath);
+        // Create destination folder if it doesn't exist
+        if (!fs.existsSync(dest)) {
+            fs.mkdirSync(dest);
+        }
+
+        // Write the file to the destination folder
+        fs.writeFileSync(path.join(dest, fileName), newPath);
+
+        // Send success to renderer
+        mainWindow.webContents.send('image:done');
+
+        // Open the folder in the file explorer
+        shell.openPath(dest);
+    } catch (error) {
+        console.log('error')
+    }
+}
 
 app.on('window-all-closed', () => {
     if (!isMac) {

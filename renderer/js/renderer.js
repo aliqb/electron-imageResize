@@ -60,6 +60,12 @@ function resizeImage(e) {
     });
 }
 
+// When done, show message
+ipcRenderer.on('image:done', () =>{
+    alertSuccess(`Image resized to ${heightInput.value} x ${widthInput.value}`)
+}
+);
+
 function alertSuccess(message) {
     Toastify.toast({
         text: message,
@@ -87,4 +93,4 @@ function alertError(message) {
 }
 
 img.addEventListener('change', loadImage);
-form.addEventListener('submit',resizeImage)
+form.addEventListener('submit', resizeImage)
