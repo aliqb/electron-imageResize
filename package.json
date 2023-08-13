@@ -1,0 +1,15 @@
+{
+  "name": "elctron-traversy",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "productName": "imageResize",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ali QB",
+  "license": "ISC",
+  "dependencies": {
+    "electron": "^25.5.0"
+  }
+}
