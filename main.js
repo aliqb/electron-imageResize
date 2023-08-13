@@ -7,7 +7,12 @@ const isDev = process.env.NODE_ENV !== 'production';
 const createMainWindow = () => {
     const win = new BrowserWindow({
         width: isDev ? 1000 : 500,
-        height: 600
+        height: 600,
+        webPreferences: {
+            contextIsolation: true,
+            nodeIntegration: true,
+            preload: path.join(__dirname, 'preload.js')
+        }
     })
     if (isDev) {
         win.webContents.openDevTools()

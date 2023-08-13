@@ -31,6 +31,7 @@ function loadImage(event) {
     reader.readAsDataURL(file);
     form.style.display = 'block';
     filename.innerHTML = img.files[0].name;
+    outputPath.innerText = path.join(os.homeDir(), 'imageresizer');
 }
 
 img.addEventListener('change', loadImage)
