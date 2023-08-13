@@ -20,8 +20,6 @@ const createAboutWindow = () => {
         width: 500,
         height: 600
     })
-    if (isDev) {
-    }
     win.loadFile(path.join(__dirname, './renderer/about.html'))
 }
 
@@ -33,7 +31,7 @@ const menu = [
                 submenu: [
                     {
                         label: 'About',
-                        click:createAboutWindow
+                        click: createAboutWindow
                     },
                 ],
             },
@@ -49,7 +47,7 @@ const menu = [
                 submenu: [
                     {
                         label: 'About',
-                        click:createAboutWindow
+                        click: createAboutWindow
                     },
                 ],
             },
