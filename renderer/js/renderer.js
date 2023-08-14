@@ -4,6 +4,9 @@ const outputPath = document.querySelector('#output-path');
 const filename = document.querySelector('#filename');
 const heightInput = document.querySelector('#height');
 const widthInput = document.querySelector('#width');
+const aspectInput = document.querySelector('#aspect');
+
+let ratio = 0;
 
 // Make sure file is an image
 function isFileImage(file) {
@@ -24,7 +27,8 @@ function loadImage(event) {
 
         img.onload = function () {
             heightInput.value = img.height;
-            widthInput.value = img.width
+            widthInput.value = img.width;
+            ratio = img.width / img.height;
         };
     };
 
@@ -32,6 +36,25 @@ function loadImage(event) {
     form.style.display = 'block';
     filename.innerHTML = img.files[0].name;
     outputPath.innerText = path.join(os.homeDir(), 'imageresizer');
+}
+
+function onWidthChange(event) {
+    if (aspectInput.checked) {
+        heightInput.value = Math.round(event.target.value / ratio);
+    }
+}
+
+function onHeightChange(event) {
+    if (aspectInput.checked) {
+        widthInput.value = Math.round(event.target.value * ratio);
+    }
+}
+
+function onAspectInputChange(event) {
+    if (event.target.checked) {
+        heightInput.value = Math.round(widthInput.value / ratio);
+
+    }
 }
 
 // Resize image
@@ -61,7 +84,7 @@ function resizeImage(e) {
 }
 
 // When done, show message
-ipcRenderer.on('image:done', () =>{
+ipcRenderer.on('image:done', () => {
     alertSuccess(`Image resized to ${heightInput.value} x ${widthInput.value}`)
 }
 );
@@ -92,5 +115,8 @@ function alertError(message) {
     });
 }
 
+widthInput.addEventListener('input', onWidthChange);
+heightInput.addEventListener('input', onHeightChange);
+aspectInput.addEventListener('change', onAspectInputChange)
 img.addEventListener('change', loadImage);
 form.addEventListener('submit', resizeImage)
