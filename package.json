@@ -5,6 +5,8 @@
   "main": "main.js",
   "productName": "imageResize",
   "scripts": {
+    "start": "electron .",
+    "build": "npx electron-packager . --out=out",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Ali QB",
@@ -13,5 +15,8 @@
     "electron": "^25.5.0",
     "resize-img": "^2.0.0",
     "toastify-js": "^1.12.0"
+  },
+  "devDependencies": {
+    "electron-packager": "^17.1.1"
   }
 }
