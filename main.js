@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, shell, dialog } = require('electron');
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
@@ -69,6 +69,8 @@ app.whenReady().then(() => {
     createMainWindow();
     const mainMenu = Menu.buildFromTemplate(menu);
     Menu.setApplicationMenu(mainMenu)
+
+    
     // Remove variable from memory
     mainWindow.on('closed', () => (mainWindow = null));
     app.on('activate', () => {
@@ -79,8 +81,30 @@ app.whenReady().then(() => {
 })
 
 ipcMain.on('image:resize', (event, options) => {
-    options.dest = path.join(os.homedir(), 'imageresizer')
+    // options.dest = path.join(os.homedir(), 'imageresizer')
     resizeImage(options)
+})
+
+ipcMain.on('path:choose', async (event, options) => {
+    const defaultPath =options.defaultPath;
+    console.log(defaultPath)
+    const dialogOptions = {
+        title: 'Choose Path',
+        defaultPath: defaultPath,
+        buttonLabel: 'Save', // Change this to your preferred label
+        filters: [
+          { name: 'Image Files', extensions: ['jpg','jpeg','png'] },
+          { name: 'All Files', extensions: ['*'] }
+        ]
+      };
+
+      const result = await dialog.showSaveDialog(dialogOptions);
+      if (!result.canceled) {
+        // The selected file path will be in result.filePath
+        mainWindow.webContents.send('path:done',{
+            path: result.filePath || defaultPath
+        });
+      }
 })
 
 async function resizeImage({ imgPath, height, width, dest }) {
@@ -91,14 +115,14 @@ async function resizeImage({ imgPath, height, width, dest }) {
             height: +height,
         });
 
-        const fileName = path.basename(imgPath);
-        // Create destination folder if it doesn't exist
-        if (!fs.existsSync(dest)) {
-            fs.mkdirSync(dest);
-        }
+        const fileName = path.basename(dest);
+        // // Create destination folder if it doesn't exist
+        // if (!fs.existsSync(dest)) {
+        //     fs.mkdirSync(dest);
+        // }
 
         // Write the file to the destination folder
-        fs.writeFileSync(path.join(dest, fileName), newPath);
+        fs.writeFileSync(path.join(dest), newPath);
 
         // Send success to renderer
         mainWindow.webContents.send('image:done');
@@ -106,7 +130,7 @@ async function resizeImage({ imgPath, height, width, dest }) {
         // Open the folder in the file explorer
         shell.openPath(dest);
     } catch (error) {
-        console.log('error')
+        console.log(error)
     }
 }
 

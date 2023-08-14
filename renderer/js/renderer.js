@@ -1,13 +1,14 @@
 const form = document.querySelector('#img-form');
 const img = document.querySelector('#img');
-const outputPath = document.querySelector('#output-path');
+const outputPathElement = document.querySelector('#output-path');
 const filename = document.querySelector('#filename');
 const heightInput = document.querySelector('#height');
 const widthInput = document.querySelector('#width');
 const aspectInput = document.querySelector('#aspect');
+const outputButton = document.querySelector('#output-button');
 
 let ratio = 0;
-
+let outputPath = '';
 // Make sure file is an image
 function isFileImage(file) {
     const acceptedImageTypes = ['image/gif', 'image/jpeg', 'image/png'];
@@ -16,6 +17,7 @@ function isFileImage(file) {
 
 function loadImage(event) {
     const file = event.target.files[0];
+    console.log(file.path)
     if (!isFileImage(file)) {
         alertError('Please select an image');
         return
@@ -35,7 +37,8 @@ function loadImage(event) {
     reader.readAsDataURL(file);
     form.style.display = 'block';
     filename.innerHTML = img.files[0].name;
-    outputPath.innerText = path.join(os.homeDir(), 'imageresizer');
+    outputPath = path.join(os.homeDir(), 'imageresizer');
+    outputPathElement.innerText = outputPath;
 }
 
 function onWidthChange(event) {
@@ -80,8 +83,24 @@ function resizeImage(e) {
         imgPath,
         height,
         width,
+        dest: outputPath
     });
 }
+
+function openChoosePathDialog() {
+    const file = img.files[0];
+    ipcRenderer.send('path:choose', {
+        name: file.name,
+        defaultPath: file.path
+    })
+}
+
+// When done, show message
+ipcRenderer.on('path:done', (options) => {
+    outputPath = options.path
+    outputPathElement.innerText = outputPath;
+}
+);
 
 // When done, show message
 ipcRenderer.on('image:done', () => {
@@ -119,4 +138,5 @@ widthInput.addEventListener('input', onWidthChange);
 heightInput.addEventListener('input', onHeightChange);
 aspectInput.addEventListener('change', onAspectInputChange)
 img.addEventListener('change', loadImage);
-form.addEventListener('submit', resizeImage)
+form.addEventListener('submit', resizeImage);
+outputButton.addEventListener('click', openChoosePathDialog)

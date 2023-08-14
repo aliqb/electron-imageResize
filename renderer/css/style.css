@@ -816,3 +816,7 @@ video {
 .focus\:ring-offset-2:focus {
   --tw-ring-offset-width: 2px;
 }
+
+.text-underline{
+  text-decoration: underline;
+}
