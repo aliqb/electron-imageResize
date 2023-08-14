@@ -1,6 +1,5 @@
 const { app, BrowserWindow, Menu, ipcMain, shell, dialog } = require('electron');
 const path = require('path');
-const os = require('os');
 const fs = require('fs');
 const resizeImg = require('resize-img');
 
@@ -70,7 +69,12 @@ app.whenReady().then(() => {
     const mainMenu = Menu.buildFromTemplate(menu);
     Menu.setApplicationMenu(mainMenu)
 
-    
+    mainWindow.webContents.on('did-finish-load', () => {
+        console.log('wwwwwwww')
+        const picturesDirectoryPath = app.getPath('pictures');
+        console.log('dd',picturesDirectoryPath)
+        mainWindow.webContents.send('pictures-directory-path', picturesDirectoryPath);
+    });
     // Remove variable from memory
     mainWindow.on('closed', () => (mainWindow = null));
     app.on('activate', () => {
@@ -81,30 +85,29 @@ app.whenReady().then(() => {
 })
 
 ipcMain.on('image:resize', (event, options) => {
-    // options.dest = path.join(os.homedir(), 'imageresizer')
     resizeImage(options)
 })
 
 ipcMain.on('path:choose', async (event, options) => {
-    const defaultPath =options.defaultPath;
+    const defaultPath = options.defaultPath;
     console.log(defaultPath)
     const dialogOptions = {
         title: 'Choose Path',
         defaultPath: defaultPath,
         buttonLabel: 'Save', // Change this to your preferred label
         filters: [
-          { name: 'Image Files', extensions: ['jpg','jpeg','png'] },
-          { name: 'All Files', extensions: ['*'] }
+            { name: 'Image Files', extensions: ['jpg', 'jpeg', 'png'] },
+            { name: 'All Files', extensions: ['*'] }
         ]
-      };
+    };
 
-      const result = await dialog.showSaveDialog(dialogOptions);
-      if (!result.canceled) {
+    const result = await dialog.showSaveDialog(dialogOptions);
+    if (!result.canceled) {
         // The selected file path will be in result.filePath
-        mainWindow.webContents.send('path:done',{
+        mainWindow.webContents.send('path:done', {
             path: result.filePath || defaultPath
         });
-      }
+    }
 })
 
 async function resizeImage({ imgPath, height, width, dest }) {
@@ -114,21 +117,13 @@ async function resizeImage({ imgPath, height, width, dest }) {
             width: +width,
             height: +height,
         });
-
-        const fileName = path.basename(dest);
-        // // Create destination folder if it doesn't exist
-        // if (!fs.existsSync(dest)) {
-        //     fs.mkdirSync(dest);
-        // }
-
-        // Write the file to the destination folder
         fs.writeFileSync(path.join(dest), newPath);
 
         // Send success to renderer
         mainWindow.webContents.send('image:done');
 
         // Open the folder in the file explorer
-        shell.openPath(dest);
+        shell.openPath(path.dirname(dest));
     } catch (error) {
         console.log(error)
     }

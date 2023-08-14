@@ -1,12 +1,9 @@
 const { contextBridge, ipcRenderer } = require('electron')
 const Toastify = require('toastify-js');
 
-const os = require('os')
 const path = require('path')
 
-contextBridge.exposeInMainWorld('os', {
-    homeDir: () => os.homedir()
-})
+
 
 contextBridge.exposeInMainWorld('path', {
     join: path.join

@@ -9,6 +9,7 @@ const outputButton = document.querySelector('#output-button');
 
 let ratio = 0;
 let outputPath = '';
+let picturesPath = '';
 // Make sure file is an image
 function isFileImage(file) {
     const acceptedImageTypes = ['image/gif', 'image/jpeg', 'image/png'];
@@ -36,8 +37,8 @@ function loadImage(event) {
 
     reader.readAsDataURL(file);
     form.style.display = 'block';
-    filename.innerHTML = img.files[0].name;
-    outputPath = path.join(os.homeDir(), 'imageresizer');
+    filename.innerHTML = file.name;
+    outputPath = `${picturesPath}\\${file.name}`
     outputPathElement.innerText = outputPath;
 }
 
@@ -107,6 +108,12 @@ ipcRenderer.on('image:done', () => {
     alertSuccess(`Image resized to ${heightInput.value} x ${widthInput.value}`)
 }
 );
+
+ipcRenderer.on('pictures-directory-path', (path) => {
+    console.log('Received Pictures Directory Path:', path);
+    picturesPath = path;
+    // Now you can use the path in your web page
+  });
 
 function alertSuccess(message) {
     Toastify.toast({
