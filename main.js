@@ -16,9 +16,7 @@ const createMainWindow = () => {
             preload: path.join(__dirname, 'preload.js')
         }
     })
-    console.log(isDev)
     if (isDev) {
-        console.log('isDev')
         mainWindow.webContents.openDevTools()
     }
     mainWindow.loadFile(path.join(__dirname, './renderer/index.html'))
@@ -70,9 +68,7 @@ app.whenReady().then(() => {
     Menu.setApplicationMenu(mainMenu)
 
     mainWindow.webContents.on('did-finish-load', () => {
-        console.log('wwwwwwww')
         const picturesDirectoryPath = app.getPath('pictures');
-        console.log('dd',picturesDirectoryPath)
         mainWindow.webContents.send('pictures-directory-path', picturesDirectoryPath);
     });
     // Remove variable from memory
@@ -90,7 +86,6 @@ ipcMain.on('image:resize', (event, options) => {
 
 ipcMain.on('path:choose', async (event, options) => {
     const defaultPath = options.defaultPath;
-    console.log(defaultPath)
     const dialogOptions = {
         title: 'Choose Path',
         defaultPath: defaultPath,

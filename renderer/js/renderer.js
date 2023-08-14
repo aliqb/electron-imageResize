@@ -18,7 +18,6 @@ function isFileImage(file) {
 
 function loadImage(event) {
     const file = event.target.files[0];
-    console.log(file.path)
     if (!isFileImage(file)) {
         alertError('Please select an image');
         return
@@ -110,7 +109,6 @@ ipcRenderer.on('image:done', () => {
 );
 
 ipcRenderer.on('pictures-directory-path', (path) => {
-    console.log('Received Pictures Directory Path:', path);
     picturesPath = path;
     // Now you can use the path in your web page
   });
