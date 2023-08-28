@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, ipcMain, shell, dialog } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, shell, dialog, MenuItem, globalShortcut, Tray } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const resizeImg = require('resize-img');
@@ -20,6 +20,23 @@ const createMainWindow = () => {
         mainWindow.webContents.openDevTools()
     }
     mainWindow.loadFile(path.join(__dirname, './renderer/index.html'))
+}
+
+const addTray = () => {
+    const iconPath = path.join(__dirname, 'assets/icons/Icon_16x16.png');
+    const tray = new Tray(iconPath);
+    const menu = Menu.buildFromTemplate([{
+        label:'Quit',
+        click:()=>{
+            app.isQuiting = true;
+            app.quit()
+        }
+    }])
+    tray.setContextMenu(menu)
+    tray.setToolTip("image resizer");
+    tray.addListener('click', () => {
+        mainWindow.show()
+    })
 }
 
 const createAboutWindow = () => {
@@ -44,9 +61,19 @@ const menu = [
             },
         ]
         : []),
-    {
-        role: 'fileMenu'
-    },
+        {
+            role: 'fileMenu',
+            submenu: [
+                ...(isMac ? [] : [{
+                    label: 'Quit',
+                    accelerator: 'CmdOrCtrl+Q',  
+                    click: () => {
+                        app.isQuiting = true;
+                        app.quit();
+                    }
+                }])
+            ]
+        },
     ...(!isMac
         ? [
             {
@@ -54,7 +81,8 @@ const menu = [
                 submenu: [
                     {
                         label: 'About',
-                        click: createAboutWindow
+                        click: createAboutWindow,
+                        accelerator: 'cmdOrCtrl + Shift + H'
                     },
                 ],
             },
@@ -67,17 +95,39 @@ app.whenReady().then(() => {
     const mainMenu = Menu.buildFromTemplate(menu);
     Menu.setApplicationMenu(mainMenu)
 
+    const ctxMenu = new Menu();
+
+    ctxMenu.append(new MenuItem({
+        label: 'About',
+        click:()=>createAboutWindow()
+    }))
+
+    mainWindow.webContents.on('context-menu', (params) => {
+        ctxMenu.popup(mainWindow, params.x, params.y)
+    })
+
     mainWindow.webContents.on('did-finish-load', () => {
         const picturesDirectoryPath = app.getPath('pictures');
         mainWindow.webContents.send('pictures-directory-path', picturesDirectoryPath);
     });
+
+    globalShortcut.register('Alt + R', () => mainWindow.show())
+
     // Remove variable from memory
-    mainWindow.on('closed', () => (mainWindow = null));
+    mainWindow.on('close', (event) => {
+        if (!app.isQuiting) {
+            event.preventDefault();
+            mainWindow.hide();
+        }
+    });
+
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
             createMainWindow()
         }
     })
+
+    addTray();
 })
 
 ipcMain.on('image:resize', (event, options) => {
@@ -114,18 +164,24 @@ async function resizeImage({ imgPath, height, width, dest }) {
         });
         fs.writeFileSync(path.join(dest), newPath);
 
+
         // Send success to renderer
         mainWindow.webContents.send('image:done');
 
         // Open the folder in the file explorer
-        shell.openPath(path.dirname(dest));
+        shell.showItemInFolder(dest);
     } catch (error) {
         console.log(error)
     }
 }
 
-app.on('window-all-closed', () => {
-    if (!isMac) {
-        app.quit()
-    }
+app.on('will-quit', function () {
+    globalShortcut.unregisterAll()
 })
+
+
+// app.on('window-all-closed', () => {
+//     if (!isMac) {
+//         app.quit()
+//     }
+// })
